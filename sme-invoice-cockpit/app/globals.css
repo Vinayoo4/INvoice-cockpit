@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-indigo-600 hover:bg-indigo-500 text-white;
+  }
+  .btn-secondary {
+    @apply btn bg-slate-700 hover:bg-slate-600 text-slate-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 hover:bg-red-500 text-white;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-slate-800 text-slate-300;
+  }
+  .card {
+    @apply bg-slate-900 border border-slate-800 rounded-xl p-5;
+  }
+  .input {
+    @apply w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+  }
+  .label {
+    @apply block text-xs font-medium text-slate-400 mb-1;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-green {
+    @apply badge bg-emerald-900/50 text-emerald-400 border border-emerald-800;
+  }
+  .badge-yellow {
+    @apply badge bg-yellow-900/50 text-yellow-400 border border-yellow-800;
+  }
+  .badge-red {
+    @apply badge bg-red-900/50 text-red-400 border border-red-800;
+  }
+  .badge-blue {
+    @apply badge bg-blue-900/50 text-blue-400 border border-blue-800;
+  }
+  .badge-slate {
+    @apply badge bg-slate-800 text-slate-400 border border-slate-700;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
