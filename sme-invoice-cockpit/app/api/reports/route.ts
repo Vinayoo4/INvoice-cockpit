@@ -4,8 +4,9 @@ import { getAll } from "@/lib/jsonDb";
 import type { Customer, Invoice, Payment } from "@/lib/types";
 
 function toCsv(rows: Record<string, string | number | undefined>[]) {
-  if (!rows.length) return "";
-  const headers = Object.keys(rows[0]);
+  const firstRow = rows[0];
+  if (!firstRow) return "";
+  const headers = Object.keys(firstRow);
   const escape = (v: string | number | undefined) =>
     `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = [headers.join(",")];
@@ -105,18 +106,18 @@ export async function GET(req: NextRequest) {
   const monthlyRevenue = bizPayments
     .filter((p) => !month || p.paidAt.startsWith(month))
     .reduce((sum, p) => sum + p.amount, 0);
-  const paymentDates = new Map<string, string>();
+  const paymentDates = new Map<string, number>();
   for (const p of bizPayments) {
+    const paidAt = new Date(p.paidAt).getTime();
+    if (!Number.isFinite(paidAt)) continue;
     const prev = paymentDates.get(p.invoiceId);
-    if (!prev || new Date(p.paidAt) < new Date(prev)) {
-      paymentDates.set(p.invoiceId, p.paidAt);
-    }
+    paymentDates.set(p.invoiceId, prev == null ? paidAt : Math.min(prev, paidAt));
   }
   const avgDaysToPay = bizInvoices
     .filter((i) => i.amountPaid > 0 && paymentDates.has(i.id))
     .map((i) => {
       const created = new Date(i.issueDate).getTime();
-      const paid = new Date(paymentDates.get(i.id)!).getTime();
+      const paid = paymentDates.get(i.id)!;
       return Math.max((paid - created) / (24 * 60 * 60 * 1000), 0);
     });
 

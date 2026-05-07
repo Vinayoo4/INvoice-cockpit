@@ -8,6 +8,7 @@ import type { Invoice, User, WebhookLog } from "@/lib/types";
 function daysUntil(dateStr: string): number {
   const now = new Date();
   const due = new Date(dateStr);
+  if (!Number.isFinite(due.getTime())) return Number.NaN;
   const oneDay = 24 * 60 * 60 * 1000;
   return Math.ceil((due.getTime() - now.getTime()) / oneDay);
 }

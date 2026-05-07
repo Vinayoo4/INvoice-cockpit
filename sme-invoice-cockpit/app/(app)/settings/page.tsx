@@ -29,14 +29,19 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/business")
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error ?? "Failed to load settings");
-        return data;
+    Promise.all([
+      fetch("/api/business"),
+      fetch("/api/auth/me"),
+    ])
+      .then(async ([bizRes, meRes]) => {
+        const bizData = await bizRes.json();
+        const meData = await meRes.json();
+        if (!bizRes.ok) throw new Error(bizData.error ?? "Failed to load settings");
+        if (!meRes.ok) throw new Error(meData.error ?? "Failed to load profile");
+        return { bizData, meData };
       })
-      .then((d) => {
-        const b: Business = d.business;
+      .then(({ bizData, meData }) => {
+        const b: Business = bizData.business;
         setBusiness(b);
         setForm({
           name: b.name,
@@ -44,14 +49,14 @@ export default function SettingsPage() {
           address: b.address ?? "",
           country: b.country,
           timezone: b.timezone,
-          whatsappNumber: user?.whatsappNumber ?? "",
+          whatsappNumber: meData.user?.whatsappNumber ?? "",
         });
       })
       .catch((e: unknown) => {
         setError(e instanceof Error ? e.message : "Failed to load settings");
       })
       .finally(() => setLoading(false));
-  }, [user?.whatsappNumber]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,7 +87,7 @@ export default function SettingsPage() {
         });
         const profileData = await profileRes.json();
         if (!profileRes.ok) {
-        setError(profileData.error ?? "Failed to save WhatsApp number");
+          setError(profileData.error ?? "Failed to save WhatsApp number");
         } else {
           setBusiness(businessData.business);
           setSuccess(true);

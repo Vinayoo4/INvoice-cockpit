@@ -8,8 +8,16 @@ export function isRateLimited(
   const now = Date.now();
   const list = buckets.get(key) ?? [];
   const recent = list.filter((ts) => now - ts < windowMs);
+  if (recent.length === 0 && buckets.has(key)) {
+    buckets.delete(key);
+  }
   recent.push(now);
   buckets.set(key, recent);
+  for (const [k, timestamps] of Array.from(buckets.entries())) {
+    if (timestamps.every((ts) => now - ts >= windowMs)) {
+      buckets.delete(k);
+    }
+  }
   return recent.length > limit;
 }
 

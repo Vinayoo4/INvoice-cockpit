@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   const invoice = invoices[idx];
-  const amount = Math.round((amountPaise / 100) * 100) / 100;
+  const amount = amountPaise / 100;
   const payment: Payment = {
     id: nanoid(),
     invoiceId: invoice.id,
