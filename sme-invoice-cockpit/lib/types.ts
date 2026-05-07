@@ -70,6 +70,7 @@ export type Invoice = {
   taxTotal: number;
   total: number;
   amountPaid: number;
+  paymentLinkUrl?: string;
   notes?: string;
   createdAt: string;
 };
@@ -94,7 +95,7 @@ export type Session = {
 
 export type WebhookLog = {
   id: ID;
-  source: "whatsapp" | "meta" | "instagram";
+  source: "whatsapp" | "meta" | "instagram" | "razorpay";
   direction: "inbound" | "outbound";
   from?: string;
   to?: string;
