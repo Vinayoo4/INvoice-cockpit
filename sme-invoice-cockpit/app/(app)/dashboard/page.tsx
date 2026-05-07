@@ -48,11 +48,19 @@ export default function DashboardPage() {
   const { business } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/dashboard")
-      .then((r) => r.json())
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error ?? "Failed to load dashboard");
+        return data;
+      })
       .then(setStats)
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : "Failed to load");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,6 +68,14 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin h-6 w-6 rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <p className="text-sm text-red-400">{error}</p>
       </div>
     );
   }

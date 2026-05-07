@@ -1,8 +1,12 @@
 // lib/jsonDb.ts
 import { promises as fs } from "fs";
+import fsSync from "fs";
 import path from "path";
 
 const DATA_DIR = path.join(process.cwd(), "data");
+if (!fsSync.existsSync(DATA_DIR)) {
+  fsSync.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 export type CollectionName =
   | "users"
@@ -51,7 +55,13 @@ async function readJsonFile<T>(filePath: string): Promise<T[]> {
     if (!raw.trim()) return [];
     return JSON.parse(raw) as T[];
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      await fs.writeFile(filePath, "[]", "utf8");
+      return [];
+    }
+    if (err instanceof SyntaxError) {
+      console.error(`Failed to parse JSON file: ${filePath}`, err);
+    }
     throw err;
   }
 }

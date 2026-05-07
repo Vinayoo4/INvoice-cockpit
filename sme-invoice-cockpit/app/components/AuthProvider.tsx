@@ -7,6 +7,7 @@ type AuthUser = {
   email: string;
   businessId: string;
   role: string;
+  whatsappNumber?: string;
 };
 
 type Business = {

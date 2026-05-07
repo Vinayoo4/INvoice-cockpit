@@ -28,6 +28,7 @@ type Invoice = {
   taxTotal: number;
   total: number;
   amountPaid: number;
+  paymentLinkUrl?: string;
   notes?: string;
   createdAt: string;
 };
@@ -57,6 +58,8 @@ export default function InvoiceDetailPage() {
   });
   const [payError, setPayError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   async function load() {
     const [invRes, payRes] = await Promise.all([
@@ -125,6 +128,24 @@ export default function InvoiceDetailPage() {
       setPayError("Network error.");
     } finally {
       setPaying(false);
+    }
+  }
+
+  async function createPaymentLink() {
+    setLinkLoading(true);
+    setLinkError("");
+    try {
+      const res = await fetch(`/api/invoices/${id}/payment-link`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setLinkError(data.error ?? "Failed to create payment link");
+      } else if (invoice) {
+        setInvoice({ ...invoice, paymentLinkUrl: data.paymentLinkUrl });
+      }
+    } catch {
+      setLinkError("Failed to create payment link");
+    } finally {
+      setLinkLoading(false);
     }
   }
 
@@ -263,6 +284,31 @@ export default function InvoiceDetailPage() {
               Revert to Draft
             </button>
           )}
+          <button
+            onClick={createPaymentLink}
+            className="btn-secondary"
+            disabled={linkLoading}
+          >
+            {linkLoading ? "Creating link…" : "Create Payment Link"}
+          </button>
+        </div>
+      )}
+      {invoice.paymentLinkUrl && (
+        <div className="card mb-5">
+          <p className="text-xs text-slate-400 mb-1">Payment Link</p>
+          <a
+            href={invoice.paymentLinkUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-indigo-400 break-all hover:underline"
+          >
+            {invoice.paymentLinkUrl}
+          </a>
+        </div>
+      )}
+      {linkError && (
+        <div className="mb-5 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">
+          {linkError}
         </div>
       )}
 

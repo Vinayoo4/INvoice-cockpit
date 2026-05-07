@@ -2,8 +2,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginSchema } from "@/lib/validators";
 import { findUserByEmail, verifyPassword, createSession } from "@/lib/auth";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  if (isRateLimited(`auth:login:${ip}`, 20, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
@@ -36,6 +42,7 @@ export async function POST(req: NextRequest) {
     });
     res.cookies.set("session_token", session.token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,

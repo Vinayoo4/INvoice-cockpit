@@ -28,20 +28,23 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoiceMap, setInvoiceMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([fetch("/api/payments"), fetch("/api/invoices")]).then(
-      async ([pRes, iRes]) => {
+    Promise.all([fetch("/api/payments"), fetch("/api/invoices")])
+      .then(async ([pRes, iRes]) => {
         const pData = await pRes.json();
         const iData = await iRes.json();
+        if (!pRes.ok) throw new Error(pData.error ?? "Failed to load payments");
+        if (!iRes.ok) throw new Error(iData.error ?? "Failed to load invoices");
         setPayments(pData.payments ?? []);
         const invs: Invoice[] = iData.invoices ?? [];
-        setInvoiceMap(
-          Object.fromEntries(invs.map((i) => [i.id, i.number]))
-        );
-        setLoading(false);
-      }
-    );
+        setInvoiceMap(Object.fromEntries(invs.map((i) => [i.id, i.number])));
+      })
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : "Failed to load");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const totalReceived = payments.reduce((s, p) => s + p.amount, 0);
@@ -68,6 +71,10 @@ export default function PaymentsPage() {
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="animate-spin h-6 w-6 rounded-full border-2 border-indigo-500 border-t-transparent" />
+        </div>
+      ) : error ? (
+        <div className="card">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       ) : payments.length === 0 ? (
         <div className="card text-center py-12">

@@ -4,7 +4,7 @@ import { AuthProvider } from "./components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Invoice Cockpit",
-  description: "Minimal SME invoicing with JSON-file backend",
+  description: "JSON-backed SME invoicing cockpit",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-slate-950 text-slate-100 antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

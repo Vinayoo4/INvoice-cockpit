@@ -26,18 +26,27 @@ export default function InvoicesPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
     setLoading(true);
-    const [invRes, cusRes] = await Promise.all([
-      fetch("/api/invoices"),
-      fetch("/api/customers"),
-    ]);
-    const invData = await invRes.json();
-    const cusData = await cusRes.json();
-    setInvoices(invData.invoices ?? []);
-    setCustomers(cusData.customers ?? []);
-    setLoading(false);
+    setError("");
+    try {
+      const [invRes, cusRes] = await Promise.all([
+        fetch("/api/invoices"),
+        fetch("/api/customers"),
+      ]);
+      const invData = await invRes.json();
+      const cusData = await cusRes.json();
+      if (!invRes.ok) throw new Error(invData.error ?? "Failed to load invoices");
+      if (!cusRes.ok) throw new Error(cusData.error ?? "Failed to load customers");
+      setInvoices(invData.invoices ?? []);
+      setCustomers(cusData.customers ?? []);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -82,6 +91,10 @@ export default function InvoicesPage() {
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="animate-spin h-6 w-6 rounded-full border-2 border-indigo-500 border-t-transparent" />
+        </div>
+      ) : error ? (
+        <div className="card">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12">

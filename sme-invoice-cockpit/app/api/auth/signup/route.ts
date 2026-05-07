@@ -4,9 +4,15 @@ import { nanoid } from "nanoid";
 import { signupSchema } from "@/lib/validators";
 import { getAll, saveAll, upsertById } from "@/lib/jsonDb";
 import { hashPassword, createSession, findUserByEmail } from "@/lib/auth";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 import type { Business, User } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  if (isRateLimited(`auth:signup:${ip}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const parsed = signupSchema.safeParse(body);
@@ -63,6 +69,7 @@ export async function POST(req: NextRequest) {
     );
     res.cookies.set("session_token", session.token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
