@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { requireUser } from "@/app/api/_auth";
 import { customerSchema } from "@/lib/validators";
-import { getAll, upsertById } from "@/lib/jsonDb";
-import type { Customer } from "@/lib/types";
+import { getAll, upsertById, deleteById } from "@/lib/jsonDb";
+import type { Customer, Invoice } from "@/lib/types";
 
 export async function GET() {
   const user = await requireUser();
@@ -61,4 +61,35 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/customers: Server error", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+export async function DELETE(req: NextRequest) {
+  const user = await requireUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  const allCustomers = await getAll<Customer>("customers");
+  const customer = allCustomers.find((c) => c.id === id && c.businessId === user.businessId);
+  if (!customer) {
+    return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+  }
+
+  const allInvoices = await getAll<Invoice>("invoices");
+  const hasInvoices = allInvoices.some((i) => i.customerId === id && i.businessId === user.businessId);
+  if (hasInvoices) {
+    return NextResponse.json(
+      { error: "Cannot delete customer with existing invoices" },
+      { status: 400 }
+    );
+  }
+
+  await deleteById<Customer>("customers", id);
+  return NextResponse.json({ ok: true });
 }
