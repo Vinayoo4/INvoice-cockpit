@@ -397,12 +397,10 @@ Protected by `x-cron-secret` header. Set `CRON_SECRET` in `.env.local`.
 - **Responsive dark-mode UI** — consistent Tailwind component classes (`.card`, `.input`, `.btn-*`, `.badge-*`)
 
 # Items Noted
-- *Customer deletion* is not implemented on the API layer (frontend shows "not implemented")
 - *No invoice editing* — only status/notes/dueDate can be patched (no line-item changes after creation)
 - *Rate limiting is in-memory* — resets on server restart (acceptable for single-server)
 - *WhatsApp number* must be manually linked in Settings (no self-serve pairing flow yet)
 - *Meta webhook* is a placeholder — message handling is not yet implemented
-- *`useSearchParams`* in `customers/new/page.tsx` should be wrapped in `<Suspense>` per Next.js App Router conventions (works in practice but generates a dev warning)
 
 ---
 
@@ -411,8 +409,7 @@ Protected by `x-cron-secret` header. Set `CRON_SECRET` in `.env.local`.
 1. *Database migration* — swap JSON files for SQLite/Postgres when multi-tenancy is needed
 2. *Email delivery* — send invoices via email with PDF attachment
 3. *Invoice editing* — allow modifying line items on sent/draft invoices
-4. *Customer API* — full CRUD with DELETE endpoint
-5. *Staff roles* — invite team members with granular permissions
+4. *Staff roles* — invite team members with granular permissions
 6. *2FA* — two-factor authentication for account security
 7. *GST filing reports* — GSTR-1 / GSTR-3B summary exports
 8. *Recurring invoices* — subscription/retainer billing

@@ -3,12 +3,35 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/app/components/PageHeader";
 import { formatDate } from "@/app/components/ui";
-import { useCollection } from "@/lib/useData";
+import { useCollection, triggerRefresh } from "@/lib/useData";
 import type { Customer } from "@/lib/types";
 
 export default function CustomersPage() {
   const { data: customers, loading } = useCollection<Customer>("customers");
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/customers?id=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete customer");
+      } else {
+        triggerRefresh("customers");
+      }
+    } catch (err) {
+      alert("Network error. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = useMemo(
     () =>
@@ -79,6 +102,13 @@ export default function CustomersPage() {
                     >
                       Invoice
                     </Link>
+                    <button
+                      onClick={() => handleDelete(c.id, c.name)}
+                      disabled={deletingId === c.id}
+                      className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50"
+                    >
+                      {deletingId === c.id ? "Deleting..." : "Delete"}
+                    </button>
                   </td>
                 </tr>
               ))}
